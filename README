@@ -7,3 +7,10 @@ is_g1 = 0.000000, fp = 0x00000000 (Q28)
 is_g2 = 0.600000, fp = 0x099999a0 (Q28)
 vs_g = 0.848437, fp = 0x0d933330 (Q28)
 
+Test (runs on a machine with no 6303 driver):
+
+ciminaghi@peso:/home/develop/inventvm/ivm6303-calib$ ./do_test
+test 0 ... OK
+test 1 ... OK
+test 2 ... OK
+done, cleaning up

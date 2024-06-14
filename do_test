@@ -1,0 +1,58 @@
+#!/bin/sh
+#set -x
+
+# REALLY UGLY, I KNOW
+
+# <is_g1 reg val>:<is_g1 expected out>,<is_g2 reg val>:<is_g1 expected out>,<vs_g reg val>:<vs_g expected out>
+
+#      -123           128            128
+#      112            96             96
+#      -16            240            240 
+tests="0x85:-0.096094,0x80:1.000000,0x80:1.000000 \
+       0x70:0.087500,0x60:0.900000,0x60:0.950000 \
+       0xf0:-0.012500,0xf0:1.350000,0xf0:1.175000"
+      
+
+cleanup() {
+    echo "done, cleaning up"
+    rm -fr $tdir
+}
+
+trap cleanup INT
+trap cleanup EXIT
+
+i=0
+for t in $tests ; do
+    tdir=$(mktemp -d)
+
+    is_g1_v=$(echo $t | cut -d ',' -f 1 | cut -d ':' -f 1)
+    is_g1_exp=$(echo $t | cut -d ',' -f 1 | cut -d ':' -f 2)
+    is_g2_v=$(echo $t | cut -d ',' -f 2 | cut -d ':' -f 1)
+    is_g2_exp=$(echo $t | cut -d ',' -f 2 | cut -d ':' -f 2)
+    vs_g_v=$(echo $t | cut -d ',' -f 3 | cut -d ':' -f 1)
+    vs_g_exp=$(echo $t | cut -d ',' -f 3 | cut -d ':' -f 2)
+
+    echo $is_g1_v > ${tdir}/is_g1
+    echo $is_g2_v > ${tdir}/is_g2
+    echo $vs_g_v > ${tdir}/vs_g
+
+    echo -n "test $i ... "
+    
+    l=$(./ivm6303_calib ${tdir} | tr '\n' ':') || { echo "ERROR" ; exit 127 ; }
+    is_g1=$(echo $l | cut -d ':' -f 1 | cut -d ',' -f 1 | cut -d '=' -f 2)
+    is_g2=$(echo $l | cut -d ':' -f 2 | cut -d ',' -f 1 | cut -d '=' -f 2)
+    vs_g=$(echo $l | cut -d ':' -f 3 | cut -d ',' -f 1 | cut -d '=' -f 2)
+
+    is_g1_ok=$(echo "$is_g1==$is_g1_exp" | bc -q -i | tail -n 1)
+    is_g2_ok=$(echo "$is_g2==$is_g2_exp" | bc -q -i | tail -n 1)
+    vs_g_ok=$(echo "$vs_g==$vs_g_exp" | bc -q -i | tail -n 1)
+
+    [ "$is_g1_ok" = "0" ] && \
+	{ echo "is_g1 KO (expected $is_g1_exp, actual $is_g1)" ; exit 127 ; }
+    [ "$is_g2_ok" = "0" ] && \
+	{ echo "is_g2 KO (expected $is_g2_exp, actual $is_g2)" ; exit 127 ; }
+    [ "vs_g_ok" = "0" ] && \
+	{ echo "vs_g KO (expected $vs_g_exp, actual $vs_g)" ; exit 127 ; }
+    echo "OK"
+    i=$((i+1))
+done
