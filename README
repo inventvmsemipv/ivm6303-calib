@@ -1,0 +1,9 @@
+Simple program for reading calibration parameters of the ivm6303
+
+Example:
+
+root@nano:~# ./ivm6303_calib /sys/bus/i2c/devices/0-006d/
+is_g1 = 0.000000, fp = 0x00000000 (Q28)
+is_g2 = 0.600000, fp = 0x099999a0 (Q28)
+vs_g = 0.848437, fp = 0x0d933330 (Q28)
+
